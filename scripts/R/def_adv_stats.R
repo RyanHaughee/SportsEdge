@@ -1,8 +1,3 @@
-# Example file - generates a test csv output file
-# This can be used to check that R can be run from CLI and from PHP via Symfony process.
-library('dbplyr')
-library('dplyr')
-
 # include init script
 source('init.R')
 
@@ -26,15 +21,18 @@ library(nflreadr)
 library(nflfastR)
 library(nflplotR)
 library(gsisdecoder)
-
-# Database parameters
-db_table <- "nfl_teams" #UPDATE
+library(DBI)
 
 # get connection to platform database
 con <- get_db()
+db_table <- "nfl_def_adv_stats"
 
-# NFL teams
-nfl_teams <- load_teams()
+# Weekly player stats
+nfl_def_adv_stats <- load_pfr_advstats(seasons = 2023,
+                                    stat_type = "def",
+                                    summary_level = c("week","season"),
+                                    file_type = getOption("nflread.prefer",default = "rds")
+)
 
 # Enable local infile loading for the RMySQL connection
 dbGetQuery(con, "SET GLOBAL local_infile = 'ON'")
@@ -46,7 +44,7 @@ dbExecute(con, paste("TRUNCATE TABLE", db_table))
 dbWriteTable(
   conn = con,
   name = db_table,
-  value = nfl_teams, # UPDATE
+  value = nfl_def_adv_stats,
   append = TRUE,  # Append data to the existing table
   overwrite = FALSE,  # Do not overwrite the table
   row.names = FALSE,  # Do not include row names as a separate column
@@ -54,7 +52,7 @@ dbWriteTable(
 )
 
 # Filter non-numeric column names
-non_numeric_cols <- names(nfl_teams)[!sapply(nfl_teams, is.numeric)] # UPDATE
+non_numeric_cols <- names(nfl_def_adv_stats)[!sapply(nfl_def_adv_stats, is.numeric)]
 
 # SQL query to update empty strings and NA values to NULL for each non-numeric column
 for (col in non_numeric_cols) {
@@ -64,3 +62,6 @@ for (col in non_numeric_cols) {
 
 # Close the connection
 dbDisconnect(con)
+
+
+

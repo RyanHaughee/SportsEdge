@@ -1,8 +1,3 @@
-# Example file - generates a test csv output file
-# This can be used to check that R can be run from CLI and from PHP via Symfony process.
-library('dbplyr')
-library('dplyr')
-
 # include init script
 source('init.R')
 
@@ -27,11 +22,9 @@ library(nflfastR)
 library(nflplotR)
 library(gsisdecoder)
 
-# Database parameters
-db_table <- "nfl_teams" #UPDATE
-
 # get connection to platform database
 con <- get_db()
+db_table <- "nfl_teams" #UPDATE
 
 # NFL teams
 nfl_teams <- load_teams()
@@ -64,3 +57,11 @@ for (col in non_numeric_cols) {
 
 # Close the connection
 dbDisconnect(con)
+
+
+
+
+
+
+
+
