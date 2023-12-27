@@ -59,7 +59,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('nfl_def_adv_stats');
+        Schema::dropIfExists('nfl_off_adv_stats');
     }
 };
 
