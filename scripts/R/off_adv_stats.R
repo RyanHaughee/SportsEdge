@@ -35,36 +35,46 @@ nfl_off_adv_pass_stats <- load_pfr_advstats(
   stat_type = "pass",
   summary_level = c("week","season"),
   file_type = getOption("nflread.prefer",default = "rds")
-)
+) %>%
+  select(
+    -receiving_drop,-receiving_drop_pct,-passing_drop_pct,-def_times_blitzed,-def_times_hurried,-def_times_hitqb
+  )
+
+# PFR advanced rushing stats
+nfl_off_adv_rush_stats <- load_pfr_advstats(
+  seasons = 2023,
+  stat_type = "rush",
+  summary_level = c("week","season"),
+  file_type = getOption("nflread.prefer",default = "rds")
+) %>%
+  select(
+    -receiving_broken_tackles
+  )
 
 # PFR advanced receiving stats
-nfl_off_adv_rush_stats <- load_pfr_advstats(seasons = 2023,
-                                            stat_type = "rush",
-                                            summary_level = c("week","season"),
-                                            file_type = getOption("nflread.prefer",default = "rds")
-)
+nfl_off_adv_rec_stats <- load_pfr_advstats(
+  seasons = 2023,
+  stat_type = "rec",
+  summary_level = c("week","season"),
+  file_type = getOption("nflread.prefer",default = "rds")
+) %>%
+  select(
+    -rushing_broken_tackles,-passing_drops,-passing_drop_pct
+  )
 
-# PFR advanced receiving stats
-nfl_off_adv_rec_stats <- load_pfr_advstats(seasons = 2023,
-                                            stat_type = "rec",
-                                            summary_level = c("week","season"),
-                                            file_type = getOption("nflread.prefer",default = "rds")
-)
-
-# Assuming dfs is a list of your data frames (nfl_off_adv_pass_stats, nfl_off_adv_rush_stats, nfl_off_adv_rec_stats)
+# List of data frames (nfl_off_adv_pass_stats, nfl_off_adv_rush_stats, nfl_off_adv_rec_stats)
 dfs <- list(nfl_off_adv_pass_stats, nfl_off_adv_rush_stats, nfl_off_adv_rec_stats)
 
 # Get the common column names
 common_cols <- Reduce(intersect, lapply(dfs, colnames))
 
-# Combine the data frames with common columns
-nfl_off_adv_stats <- bind_rows(lapply(dfs, function(df) df[, common_cols, drop = FALSE]))
+# Create a new data frame with unique records based on common columns
+unique_records <- unique(bind_rows(lapply(dfs, function(df) df %>% distinct(across(all_of(common_cols))))))
 
-# Combine all columns from all data frames
-nfl_off_adv_stats <- bind_rows(dfs, .id = "source") %>% 
-  select(
-    -source,-def_times_blitzed,-def_times_hurried,-def_times_hitqb
-  )
+# Left join each data frame with unique_records
+nfl_off_adv_stats <- left_join(unique_records, nfl_off_adv_pass_stats, by = common_cols)
+nfl_off_adv_stats <- left_join(nfl_off_adv_stats, nfl_off_adv_rush_stats, by = common_cols)
+nfl_off_adv_stats <- left_join(nfl_off_adv_stats, nfl_off_adv_rec_stats, by = common_cols)
 
 # Enable local infile loading for the RMySQL connection
 dbGetQuery(con, "SET GLOBAL local_infile = 'ON'")

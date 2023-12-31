@@ -30,11 +30,52 @@ db_table <- "nfl_off_nextgen_stats"
 options(scipen = 9999)
 
 # Next-Gen-Stats passing stats
-nfl_off_nextgen_stats <- load_nextgen_stats(
+nfl_off_nextgen_pass <- load_nextgen_stats(
   seasons = 2023,
-  stat_type = c("passing", "receiving", "rushing"),
+  stat_type = "passing",
   file_type = getOption("nflreadr.prefer", default = "rds")
-)
+) %>%
+  filter(
+    week != 0
+  )
+
+# Next-Gen-Stats receiving stats
+nfl_off_nextgen_rec <- load_nextgen_stats(
+  seasons = 2023,
+  stat_type = "receiving",
+  file_type = getOption("nflreadr.prefer", default = "rds")
+) %>%
+  filter(
+    week != 0
+  ) %>%
+  rename(
+    avg_targeted_air_yards = avg_intended_air_yards,
+    percent_share_of_targeted_air_yards = percent_share_of_intended_air_yards
+  )
+
+# Next-Gen-Stats rushing stats
+nfl_off_nextgen_rush <- load_nextgen_stats(
+  seasons = 2023,
+  stat_type = "rushing",
+  file_type = getOption("nflreadr.prefer", default = "rds")
+) %>%
+  filter(
+    week != 0
+  )
+
+# Assuming dfs is a list of your data frames (nfl_off_nextgen_pass, nfl_off_nextgen_rec, nfl_off_nextgen_rush)
+dfs <- list(nfl_off_nextgen_pass, nfl_off_nextgen_rec, nfl_off_nextgen_rush)
+
+# Get the common column names
+common_cols <- Reduce(intersect, lapply(dfs, colnames))
+
+# Create a new data frame with unique records based on common columns
+unique_records <- unique(bind_rows(lapply(dfs, function(df) df %>% distinct(across(all_of(common_cols))))))
+
+# Left join each data frame with unique_records
+nfl_off_nextgen_stats <- left_join(unique_records, nfl_off_nextgen_pass, by = common_cols)
+nfl_off_nextgen_stats <- left_join(nfl_off_nextgen_stats, nfl_off_nextgen_rec, by = common_cols)
+nfl_off_nextgen_stats <- left_join(nfl_off_nextgen_stats, nfl_off_nextgen_rush, by = common_cols)
 
 # Enable local infile loading for the RMySQL connection
 dbGetQuery(con, "SET GLOBAL local_infile = 'ON'")
