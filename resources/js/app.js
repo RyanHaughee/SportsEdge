@@ -2,10 +2,10 @@ import './bootstrap';
 
 // https://www.youtube.com/watch?v=Su8dWVrHdkc
 import { createApp } from 'vue'
-import ExampleComponent from '/resources/js/components/ExampleComponent.vue';
+import SystemBuilder from '/resources/js/components/SystemBuilder.vue';
 const app = createApp({
     components: {
-        ExampleComponent,
+        SystemBuilder,
     }
 });
 app.mount("#app");

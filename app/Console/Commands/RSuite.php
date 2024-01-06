@@ -26,15 +26,7 @@ class RSuite extends Command
     public function handle()
     { 
         $scriptPaths = [
-            'def_adv_stats.R',
-            'kick_stats.R',
-            'off_adv_stats.R',
-            'off_nextgen_stats.R',
-            'off_stats.R',
-            'player_snaps.R',
-            'players.R',
-            'schedule.R',
-            'teams.R'
+            'schedule.R'
         ]; // R scripts inside the scripts/R directory
         $scriptDirectory = base_path('scripts/R'); // Directory containing R scripts
 
