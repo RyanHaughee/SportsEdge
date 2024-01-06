@@ -11,15 +11,22 @@ class ScheduleController extends Controller
     public function fetchAll(Request $request) {
         $filters = $request->input('filters');
 
-        if(!empty($filters)){
+        if(!empty($filters) && empty($filters["homeaway"])){
             $location_array = ["home", "away"];
         } else {
-            $location_array = ["away"];
+            if (!empty($filters["homeaway"])) {
+                $location_array = [$filters["homeaway"]];
+            } else {
+                $location_array = ["away"];
+            }
         }
         $results = [];
+        Log::info($location_array);
 
         foreach($location_array as $index => $location) {
             $home = $location === "home";
+            Log::info($location);
+            Log::info($location === "home");
             $results[$index] = Schedule::query()
             ->selectHomeAway($home)
             ->joinTeams($home);

@@ -88,6 +88,24 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.homeaway}">
+                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'homeaway' ? null : 'homeaway')">
+                                <span v-if="!filters.homeaway">Home/Away Filter</span>
+                                <span v-else-if="filters.homeaway == 'home'">Home Only</span>
+                                <span v-else-if="filters.homeaway == 'away'">Away Only</span>
+                                <i v-show="selectedFilter != 'homeaway'" class="fa-solid fa-caret-right align-right"></i>
+                                <i v-show="selectedFilter == 'homeaway'" class="fa-solid fa-caret-down align-right"></i>
+                            </div>
+                            <div class="dropdown-container" v-show="selectedFilter == 'homeaway'">
+                                <div class="dropdown-options">
+                                    <select class="default-select" v-model="filters.homeaway">
+                                        <option :value="null">N/A</option>
+                                        <option value="home">Home</option>
+                                        <option value="away">Away</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                         <div class="record-container">
                             <button v-on:click="fetchSchedule()" style="margin-top: 10px;">CLICK HERE TO UPDATE</button>
                             <div v-if="record.ATS" style="margin-top: 10px">
@@ -158,7 +176,8 @@ export default {
                     low: null,
                     high: null
                 },
-                divisional: null
+                divisional: null,
+                homeaway: null
             }
         };
     },
