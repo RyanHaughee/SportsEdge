@@ -16,18 +16,18 @@ class Schedule extends Model
      *
      * @var string
      */
-    protected $table = 'nfl_schedule';
+    protected $table = '_nfl_schedule';
 
     public function newEloquentBuilder($query): ScheduleBuilder
     {
         return new ScheduleBuilder($query);
     }
 
-    public static function processFilters($results, $filters, $home) 
+    public static function processFilters($results, $filters) 
     {
         // SPREAD HIGH / LOW
         if (isset($filters['spread'])) {
-            $results = self::processSpreadFilter($filters, $results, $home);
+            $results = self::processSpreadFilter($filters, $results);
         }
 
         // WEEK HIGH / LOW
@@ -49,11 +49,15 @@ class Schedule extends Model
         return $results;
     }
 
-    public static function processSpreadFilter($filters, $results, $home) {
-        $spreadLow = isset($filters['spread']['low']) ? intval($filters['spread']['low']) : 100;
-        $spreadHigh = isset($filters['spread']['high']) ? intval($filters['spread']['high']) : -100;
+    public static function processSpreadFilter($filters, $results) {
+        $spreadLow = isset($filters['spread']['low']) ? number_format((float)$filters['spread']['low'], 1, '.', '') : 100;
+        $spreadHigh = isset($filters['spread']['high']) ? number_format((float)$filters['spread']['high'], 1, '.', '') : -100;
 
-        return $results->spreadRange($spreadLow, $spreadHigh, $home);
+        if ($spreadLow < $spreadHigh) {
+            return $results->spreadRange($spreadLow, $spreadHigh);
+        } else {
+            return $results->spreadRange($spreadHigh, $spreadLow);
+        }
     }
 
     public static function processWeekFilter($filters, $results) {

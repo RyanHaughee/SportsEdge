@@ -11,48 +11,23 @@ class ScheduleController extends Controller
     public function fetchAll(Request $request) {
         $filters = $request->input('filters');
 
-        if(!empty($filters) && empty($filters["homeaway"])){
-            $location_array = ["home", "away"];
-        } else {
-            if (!empty($filters["homeaway"])) {
-                $location_array = [$filters["homeaway"]];
-            } else {
-                $location_array = ["away"];
-            }
-        }
-        $results = [];
-        Log::info($location_array);
+        Log::info($filters);
 
-        foreach($location_array as $index => $location) {
-            $home = $location === "home";
-            Log::info($location);
-            Log::info($location === "home");
-            $results[$index] = Schedule::query()
-            ->selectHomeAway($home)
-            ->joinTeams($home);
+        $results = Schedule::query()
+            ->selectColumns()
+            ->joinTeams();
 
-            $results[$index] = Schedule::processFilters($results[$index], $filters, $home);
+        $results = Schedule::processFilters($results, $filters);
 
-
-            $results[$index] = $results[$index]
+        $results = $results
             ->orderResults()
             ->get();
-        } 
 
-
-
-        if (isset($results[1]))
-        {
-            $merged = $results[0]->concat($results[1]);
-        } else {
-            $merged = $results[0];
-        }
-
-        $merged = $merged->sortByDesc('id');
+        $results = $results->sortByDesc('id');
 
         $result = [];
-        $result['record'] = Schedule::computeGamblingRecord($merged);
-        $result['games'] = $merged->values()->take(50);
+        $result['record'] = Schedule::computeGamblingRecord($results);
+        $result['games'] = $results->values()->take(50);
 
         return $result;
     }
