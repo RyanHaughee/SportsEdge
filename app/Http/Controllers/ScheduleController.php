@@ -17,7 +17,7 @@ class ScheduleController extends Controller
 
         $results = Schedule::processFilters($results, $filters);
 
-        $results = $results->where('season',2023)->orderResults()->get()->sortByDesc('id');
+        $results = $results->orderResults()->get()->sortByDesc('id');
 
         $result = [];
         $result['record'] = Schedule::computeGamblingRecord($results);
