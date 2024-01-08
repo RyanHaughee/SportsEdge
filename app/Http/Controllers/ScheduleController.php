@@ -11,24 +11,18 @@ class ScheduleController extends Controller
     public function fetchAll(Request $request) {
         $filters = $request->input('filters');
 
-        Log::info($filters);
-
         $results = Schedule::query()
             ->selectColumns()
             ->joinTeams();
 
         $results = Schedule::processFilters($results, $filters);
 
-        $results = $results
-            ->orderResults()
-            ->get();
-
-        $results = $results->sortByDesc('id');
+        $results = $results->where('season',2023)->orderResults()->get()->sortByDesc('id');
 
         $result = [];
         $result['record'] = Schedule::computeGamblingRecord($results);
-        $result['games'] = $results->values()->take(50);
-
+        // $result['games'] = $results->values()->take(50);
+        $result['games'] = $results->values();
         return $result;
     }
 }

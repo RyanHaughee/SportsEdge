@@ -11,7 +11,7 @@ class RSuite extends Command
      *
      * @var string
      */
-    protected $signature = 'app:r-suite';
+    protected $signature = 'app:r-suite {script?}';
 
     /**
      * The console command description.
@@ -25,9 +25,29 @@ class RSuite extends Command
      */
     public function handle()
     { 
-        $scriptPaths = [
-            'schedule.R'
-        ]; // R scripts inside the scripts/R directory
+
+        $script = $this->argument('script');
+
+
+        if ($script) {
+            $scriptPaths = [
+                $script
+            ];
+        } else {
+            $scriptPaths = [
+                'def_adv_stats.R',
+                'kick_stats.R',
+                'off_adv_stats.R',
+                'off_nextgen_stats.R',
+                'off_stats.R',
+                'player_snaps.R',
+                'players.R',
+                'schedule.R',
+                'teams.R'
+            ];
+        }
+        
+        // R scripts inside the scripts/R directory
         $scriptDirectory = base_path('scripts/R'); // Directory containing R scripts
 
         // Change directory to the R script directory

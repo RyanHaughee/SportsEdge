@@ -37,13 +37,36 @@ class Schedule extends Model
 
         // WEEK HIGH / LOW
         if (isset($filters['total'])) {
-            Log::info($filters['total']);
             $results = self::processTotalFilter($filters, $results);
         }
 
         // WEEK HIGH / LOW
         if (isset($filters['divisional'])) {
             $results = self::processDivisionalFilter($filters, $results);
+        }
+
+        if(isset($filters['gametype'])) {
+            $results = self::gameTypeFilter($filters, $results);
+        }
+
+        if(isset($filters['daysrest'])) {
+            $results = self::filterRest($filters, $results);
+        }
+
+        if(isset($filters['opprest'])) {
+            $results = self::filterOppRest($filters, $results);
+        }
+
+        if(isset($filters['homeaway'])) {
+            $results = self::homeAwayFilter($filters, $results);
+        }
+
+        if(isset($filters['lastresult'])) {
+            $results = self::lastResultFilter($filters, $results);
+        }
+
+        if(isset($filters['lastlocation'])) {
+            $results = self::lastGameLocation($filters, $results);
         }
 
         return $results;
@@ -69,7 +92,7 @@ class Schedule extends Model
 
     public static function processTotalFilter($filters, $results) {
         $totalLow = isset($filters['total']['low']) ? intval($filters['total']['low']) : 0;
-        $totalHigh = isset($filters['total']['high']) ? intval($filters['total']['high']) : 25;
+        $totalHigh = isset($filters['total']['high']) ? intval($filters['total']['high']) : 100;
     
         return $results->totalRange($totalLow, $totalHigh);
     }
@@ -79,6 +102,62 @@ class Schedule extends Model
 
         return $results->isDivisional($divisional);
     }
+
+    public static function homeAwayFilter($filters, $results) {
+        if (isset($filters['homeaway'])) {
+            switch($filters['homeaway']) {
+                case "home":
+                    $location = ["=", "Home"];
+                    break;
+                case "away":
+                    $location = ["=", "Away"];
+                    break;
+                case "neutral":
+                    $location = ["=", "Neutral"];
+                    break;
+            }
+        } else {
+            $location = ["<>", "Home"];
+        }
+
+        return $results->homeAway($location);
+    }
+
+    public static function gameTypeFilter($filters, $results) {
+        $regular_season = ($filters['gametype'] === 'regular');
+
+        return $results->gameType($regular_season);
+    }
+
+    public static function filterRest($filters, $results) {
+        $restLow = isset($filters['daysrest']['low']) ? intval($filters['daysrest']['low']) : 0;
+        $restHigh = isset($filters['daysrest']['high']) ? intval($filters['daysrest']['high']) : 25;
+
+        Log::info($restLow);
+        Log::info($restHigh);
+    
+        return $results->restFilter($restLow, $restHigh);
+    }
+
+    public static function filterOppRest($filters, $results) {
+        $restLow = isset($filters['opprest']['low']) ? intval($filters['opprest']['low']) : 0;
+        $restHigh = isset($filters['opprest']['high']) ? intval($filters['opprest']['high']) : 25;
+    
+        return $results->oppRestFilter($restLow, $restHigh);
+    }
+
+    public static function lastResultFilter($filters, $results) {
+        $lastResult = $filters['lastresult'] == "covered" ?? false;
+    
+        return $results->lastGameResult($lastResult);
+    }
+
+    public static function lastGameLocation($filters, $results) {
+        $lastLocation = $filters['lastlocation'] == "home" ? "Home" : "Away";
+    
+        return $results->lastGameLocation($lastLocation);
+    }
+
 
     public static function computeGamblingRecord($games) {
 

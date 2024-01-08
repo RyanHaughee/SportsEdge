@@ -86,4 +86,62 @@ class ScheduleBuilder extends Builder
     public function isDivisional($true) {
         return $this->where('_nfl_schedule.div_game',$true);
     }
+
+    /**
+     * Home or Away?
+     *
+     */
+    public function homeAway($location) {
+        return $this->where('_nfl_schedule.location',$location[0], $location[1]);
+    }    
+
+    public function gameType($regular_season) {
+        $equal = $regular_season ? '=' : '<>';
+            
+        return $this->where('_nfl_schedule.game_type',$equal,'REG');
+    }
+
+    /**
+     * Filter by rest
+     *
+     * @param int $low lower rest
+     * @param int $high higher rest
+     */
+    public function restFilter($low, $high) {
+        return $this->where('_nfl_schedule.team_rest','>=',$low)->where('_nfl_schedule.team_rest','<=',$high);
+    }
+
+    /**
+     * Filter by opponent rest
+     *
+     * @param int $low lower rest
+     * @param int $high higher rest
+     */
+    public function oppRestFilter($low, $high) {
+        return $this->where('_nfl_schedule.opponent_rest','>=',$low)->where('_nfl_schedule.opponent_rest','<=',$high);
+    }
+
+    /**
+     * Filter by opponent rest
+     *
+     * @param int $low lower rest
+     * @param int $high higher rest
+     */
+    public function lastGameResult($cover) {
+        if ($cover) {
+            return $this->where('_nfl_schedule.prev_result','>','_nfl_schedule.prev_spread_line');
+        } else {
+            return $this->where('_nfl_schedule.prev_result','<','_nfl_schedule.prev_spread_line');
+        }
+    }
+
+    /**
+     * Filter by opponent rest
+     *
+     * @param int $low lower rest
+     * @param int $high higher rest
+     */
+    public function lastGameLocation($location) {
+        return $this->where('_nfl_schedule.prev_location',$location);
+    }
 }
