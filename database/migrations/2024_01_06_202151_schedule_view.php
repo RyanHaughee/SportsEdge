@@ -131,7 +131,7 @@ return new class extends Migration
             LEFT JOIN _pivot p2 ON 
                 p2.team = p.team
                 AND p2.season = p.season
-                AND p2.week = p.week -1
+                AND p2.week = p.week - 1
             ORDER BY
                 season DESC
                 ,week DESC

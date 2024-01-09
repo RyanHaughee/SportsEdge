@@ -6,6 +6,7 @@ use App\Builders\ScheduleBuilder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Services\Stats;
 
 class Schedule extends Model
 {
@@ -98,7 +99,7 @@ class Schedule extends Model
     }
 
     public static function processDivisionalFilter($filters, $results) {
-        $divisional = ($filters['divisional'] === 'divisional');
+        $divisional = ($filters['divisional'] === 'Yes');
 
         return $results->isDivisional($divisional);
     }
@@ -132,9 +133,6 @@ class Schedule extends Model
     public static function filterRest($filters, $results) {
         $restLow = isset($filters['daysrest']['low']) ? intval($filters['daysrest']['low']) : 0;
         $restHigh = isset($filters['daysrest']['high']) ? intval($filters['daysrest']['high']) : 25;
-
-        Log::info($restLow);
-        Log::info($restHigh);
     
         return $results->restFilter($restLow, $restHigh);
     }
@@ -160,81 +158,89 @@ class Schedule extends Model
 
 
     public static function computeGamblingRecord($games) {
-
-        $spreadWins = $games->sum('bet_won');
-        $spreadLosses = $games->sum('bet_lost');
-
-        $unitsWon = collect($games)->sum(function ($item) {
-            return (
-                ($item->bet_won != 0 || $item->bet_lost != 0) ?
-                    $item->bet_won == 1 
-                    ? 
-                        (intval($item->spread_odds) > 0
-                        ?
-                            intval($item->spread_odds)
-                        :
-                            100
-                        )
-                    :
-                        (intval($item->spread_odds) > 0
-                        ?
-                            -100
-                        :
-                            $item->spread_odds
-                        )
-                :
-                    0
-            );
-        }) / 100;
-
-        $mlWins = collect($games)->sum(function ($item) {
-            return (
-                $item->mov > 0 ? 1 : 0
-            );
-        });
-        $mlLosses = collect($games)->sum(function ($item) {
-            return (
-                $item->mov < 0 ? 1 : 0
-            );
-        });
-
-        $mlUnitsWon = collect($games)->sum(function ($item) {
-            return (
-                ($item->mov != 0 ) ?
-                    $item->mov > 0
-                    ? 
-                        (intval($item->moneyline_odds) > 0
-                        ?
-                            intval($item->moneyline_odds)
-                        :
-                            100
-                        )
-                    :
-                        (intval($item->moneyline_odds) > 0
-                        ?
-                            -100
-                        :
-                            $item->moneyline_odds
-                        )
-                :
-                    0
-            );
-        }) / 100;
-
-        return [
-            "ATS" => [
-                "Win" => $spreadWins,
-                "Loss" => $spreadLosses,
-                "Units" => $unitsWon,
-                "ROI" => round(($unitsWon / ($spreadWins + $spreadLosses) * 100),1)
-            ],
-            "SU" => [
-                "Win" => $mlWins,
-                "Loss" => $mlLosses,
-                "Units" => $mlUnitsWon,
-                "ROI" => round(($mlUnitsWon / ($mlWins + $mlLosses) * 100),1)
-            ]
+        $returnObj['Total'] = [
+            'ATS' => ['W' => 0, 'L' => 0, 'Units' => 0, 'Investment' => 0, 'ROI' => 0],
+            'SU' => ['W' => 0, 'L' => 0, 'Units' => 0, 'Investment' => 0, 'ROI' => 0]
         ];
+        
+        foreach ($games as $game) {
+            $season = $game->season;
+        
+            if (!isset($returnObj[$season])) {
+                $returnObj[$season] = [
+                    'ATS' => ['W' => 0, 'L' => 0, 'Units' => 0, 'Investment' => 0, 'ROI' => 0],
+                    'SU' => ['W' => 0, 'L' => 0, 'Units' => 0, 'Investment' => 0, 'ROI' => 0]
+                ];
+            }
+        
+            // ATS calculation
+            $returnObj['Total']['ATS']['W'] += $game->bet_won;
+            $returnObj['Total']['ATS']['L'] += $game->bet_lost;
+            $returnObj[$season]['ATS']['W'] += $game->bet_won;
+            $returnObj[$season]['ATS']['L'] += $game->bet_lost;
+        
+            // SU calculation
+            $returnObj['Total']['SU']['W'] += $game->mov > 0 ? 1 : 0;
+            $returnObj['Total']['SU']['L'] += $game->mov < 0 ? 1 : 0;
+            $returnObj[$season]['SU']['W'] += $game->mov > 0 ? 1 : 0;
+            $returnObj[$season]['SU']['L'] += $game->mov < 0 ? 1 : 0;
+        
+            // Units calculation
+            if ($game->bet_won != 0 || $game->bet_lost != 0) {
+                $spreadOdds = (intval($game->spread_odds) / 100);
+                if ($game->bet_won == 1) {
+                    $unitsChange = ($spreadOdds > 0) ? $spreadOdds : 1;
+                } else {
+                    $unitsChange = ($spreadOdds > 0) ? -1 : $spreadOdds;
+                }
+        
+                $returnObj['Total']['ATS']['Investment'] += ($spreadOdds > 0) ? 1 : abs($spreadOdds);
+                $returnObj['Total']['ATS']['Units'] += $unitsChange;
+                $returnObj[$season]['ATS']['Investment'] += ($spreadOdds > 0) ? 1 : abs($spreadOdds);
+                $returnObj[$season]['ATS']['Units'] += $unitsChange;
+            }
+
+            if($game->mov != 0) {
+                $moneyLineOdds = (intval($game->moneyline_odds) / 100);
+                if ($game->mov > 0) {
+                    $unitChange = $moneyLineOdds > 0 ? $moneyLineOdds : 1;
+                } else {
+                    $unitChange = $moneyLineOdds > 0 ? -1 : $moneyLineOdds;
+                }
+
+                $returnObj['Total']['SU']['Investment'] += ($moneyLineOdds > 0) ? 1 : abs($moneyLineOdds);
+                $returnObj['Total']['SU']['Units'] += $unitsChange;
+                $returnObj[$season]['SU']['Investment'] += ($moneyLineOdds > 0) ? 1 : abs($moneyLineOdds);
+                $returnObj[$season]['SU']['Units'] += $unitsChange;
+            }
+
+
+        }
+
+        foreach($returnObj as $year => $obj) {
+            $returnObj[$year]['ATS']['ROI'] = $obj['ATS']['Investment'] != 0 ? number_format(($obj['ATS']['Units'] / $obj['ATS']['Investment'] * 100),1) : 0;
+            $returnObj[$year]['SU']['ROI'] = $obj['ATS']['Investment'] != 0 ? number_format(($obj['SU']['Units'] / $obj['SU']['Investment'] * 100),1) : 0;
+
+            $returnObj[$year]['ATS']['Units'] = number_format($obj['ATS']['Units'], 1);
+            $returnObj[$year]['SU']['Units'] = number_format($obj['SU']['Units'], 1);
+        }
+
+        // Define parameters for the binomial distribution
+        $trials = ($returnObj['Total']['ATS']['W'] + $returnObj['Total']['ATS']['L']); // Number of trials
+        $probability = 0.524; // Probability of success for each trial
+        $successes = $returnObj['Total']['ATS']['W']; // Observed number of successes
+
+        $statsService = new Stats();
+        $p_value = 1 - $statsService->binomialPValue($trials, $probability, $successes);
+
+        // Calculate the p-value
+        $grade = number_format($p_value*100,0);
+
+
+        // Calculate p-value using CDF
+        $returnObj['Total']['ATS']['Grade'] = number_format($grade,0);
+
+        return $returnObj;
                 
     }
 }

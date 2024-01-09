@@ -4,219 +4,47 @@
             <thead>
                 <tr>
                     <th colspan="7">
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.spread.low > -30 || filters.spread.high < 30 }">
+                        <div class="grid-container">
+                            <div class="results">
+                                <table class="roi-table">
+                                <tr>
+                                    <th colspan="4">Grade: {{ record?.Total?.ATS?.Grade }}</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="2">Total</th>
+                                    <th colspan="2">2023</th>
+                                </tr>
+                                <tr>
+                                    <td>ATS:</td>
+                                    <td>
+                                        {{ record?.Total?.ATS?.W }} - {{ record?.Total?.ATS?.L }}<br/>
+                                        {{ record?.Total?.ATS?.Units }}u<br/>
+                                        {{ record?.Total?.ATS?.ROI }}% ROI
+                                    </td>
+                                    <td>ATS:</td>
+                                    <td>
+                                        {{ record?.[2023]?.ATS?.W }} - {{ record?.[2023]?.ATS?.L }}<br/>
+                                        {{ record?.[2023]?.ATS?.Units }}u<br/>
+                                        {{ record?.[2023]?.ATS?.ROI }}% ROI
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="record-container">
+                                <button v-on:click="fetchSchedule()" style="margin-top: 10px;">CLICK HERE TO UPDATE</button>
+                            </div>
 
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'spread' ? null : 'spread')">
-                                <span v-if="!(filters.spread.low > -30 || filters.spread.high < 30)">Spread</span>
-                                <span v-else>{{ filters.spread.low ? filters.spread.low : "less than" }} {{ (filters.spread.high && filters.spread.low) ? "to" : "" }} {{ filters.spread.high ? filters.spread.high : "or more" }}</span>
-                                <i v-show="selectedFilter != 'spread'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'spread'" class="fa-solid fa-caret-down align-right"></i>
                             </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'spread'">
-                                <div class="dropdown-options">
-                                    <div class='range-slider'>
-                                        <input type="range" min="-30" max="30" step="1" v-model="filters.spread.low" @change="slider()">
-                                        <input type="range" min="-30" max="30" step="1" v-model="filters.spread.high" @change="slider()">
-                                    </div>
-                                    <div class="select-container">
-                                        <!-- Customizable filter options will be populated here -->
-                                        <label for="spread-low">Low</label><br>
-                                        <input id="spread-low" type="text" v-model="filters.spread.low"/>
-                                    </div>
-                                    
-                                    <div class="select-container">
-                                        <label for="spread-high">High</label><br>
-                                        <input id="spread-high" type="text" v-model="filters.spread.high"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.week.low || filters.week.high }">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'week' ? null : 'week')">
-                                <span v-if="!(filters.week.low || filters.week.high)">Weeks</span>
-                                <span v-else>{{ filters.week.low ? "Week "+filters.week.low : "Before" }} {{ (filters.week.high && filters.week.low) ? "to" : "" }} {{ filters.week.high ? "Week "+filters.week.high : "and after" }}</span>
-                                <i v-show="selectedFilter != 'week'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'week'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'week'">
-                                <div class="dropdown-options">
-                                    <div class="select-container">
-                                        <!-- Customizable filter options will be populated here -->
-                                        <label for="week-low">Low</label><br>
-                                        <input id="week-low" type="text" v-model="filters.week.low"/>
-                                    </div>
-                                    
-                                    <div class="select-container">
-                                        <label for="week-high">High</label><br>
-                                        <input id="week-high" type="text" v-model="filters.week.high"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.total.low || filters.total.high }">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'total' ? null : 'total')">
-                                <span v-if="!(filters.total.low || filters.total.high)">Total</span>
-                                <span v-else>{{ filters.total.low ? filters.total.low : "less than" }} {{ (filters.total.high && filters.total.low) ? "to" : "" }} {{ filters.total.high ? filters.total.high : "or more" }}</span>
-                                <i v-show="selectedFilter != 'total'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'total'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'total'">
-                                <div class="dropdown-options">
-                                    <div class="select-container">
-                                        <!-- Customizable filter options will be populated here -->
-                                        <label for="total-low">Low</label><br>
-                                        <input id="total-low" type="text" v-model="filters.total.low"/>
-                                    </div>
-                                    
-                                    <div class="select-container">
-                                        <label for="total-high">High</label><br>
-                                        <input id="total-high" type="text" v-model="filters.total.high"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.divisional}">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'divisional' ? null : 'divisional')">
-                                <span v-if="!filters.divisional">Divisional Filter</span>
-                                <span v-else-if="filters.divisional == 'divisional'">Division Only</span>
-                                <span v-else-if="filters.divisional == 'nondivisional'">Nondivision Only</span>
-                                <i v-show="selectedFilter != 'divisional'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'divisional'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'divisional'">
-                                <div class="dropdown-options">
-                                    <select class="default-select" v-model="filters.divisional">
-                                        <option :value="null">N/A</option>
-                                        <option value="divisional">Divisional</option>
-                                        <option value="nondivisional">Non-divisional</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.homeaway}">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'homeaway' ? null : 'homeaway')">
-                                <span v-if="!filters.homeaway">Home/Away Filter</span>
-                                <span v-else-if="filters.homeaway == 'home'">Home Only</span>
-                                <span v-else-if="filters.homeaway == 'away'">Away Only</span>
-                                <span v-else-if="filters.homeaway == 'neutral'">Neutral Only</span>
-                                <i v-show="selectedFilter != 'homeaway'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'homeaway'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'homeaway'">
-                                <div class="dropdown-options">
-                                    <select class="default-select" v-model="filters.homeaway">
-                                        <option :value="null">N/A</option>
-                                        <option value="home">Home</option>
-                                        <option value="away">Away</option>
-                                        <option value="neutral">Neutral</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.gametype}">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'gametype' ? null : 'gametype')">
-                                <span v-if="!filters.gametype">Game Type</span>
-                                <span v-else-if="filters.gametype == 'regular'">Regular Season</span>
-                                <span v-else-if="filters.gametype == 'playoffs'">Playoffs</span>
-                                <i v-show="selectedFilter != 'gametype'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'gametype'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'gametype'">
-                                <div class="dropdown-options">
-                                    <select class="default-select" v-model="filters.gametype">
-                                        <option :value="null">N/A</option>
-                                        <option value="regular">Regular Season</option>
-                                        <option value="playoffs">Playoffs</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.daysrest.low || filters.daysrest.high }">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'daysrest' ? null : 'daysrest')">
-                                <span v-if="!(filters.daysrest.low || filters.daysrest.high)">Team Rest</span>
-                                <span v-else>{{ filters.daysrest.low ? "Rested "+filters.daysrest.low : "Less than" }} {{ (filters.daysrest.high && filters.daysrest.low) ? "to" : "" }} {{ filters.daysrest.high ? filters.daysrest.high+" Days" : "or more"}}</span>
-                                <i v-show="selectedFilter != 'daysrest'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'daysrest'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'daysrest'">
-                                <div class="dropdown-options">
-                                    <div class="select-container">
-                                        <!-- Customizable filter options will be populated here -->
-                                        <label for="daysrest-low">Low</label><br>
-                                        <input id="daysrest-low" type="text" v-model="filters.daysrest.low"/>
-                                    </div>
-                                    
-                                    <div class="select-container">
-                                        <label for="daysrest-high">High</label><br>
-                                        <input id="daysrest-high" type="text" v-model="filters.daysrest.high"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.opprest.low || filters.opprest.high }">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'opprest' ? null : 'opprest')">
-                                <span v-if="!(filters.opprest.low || filters.opprest.high)">Opp Rest</span>
-                                <span v-else>Opp {{ filters.opprest.low ? "Rested "+filters.opprest.low : "Less than" }} {{ (filters.opprest.high && filters.opprest.low) ? "to" : "" }} {{ filters.opprest.high ? filters.opprest.high+" Days" : "or more"}}</span>
-                                <i v-show="selectedFilter != 'opprest'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'opprest'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'opprest'">
-                                <div class="dropdown-options">
-                                    <div class="select-container">
-                                        <!-- Customizable filter options will be populated here -->
-                                        <label for="opprest-low">Low</label><br>
-                                        <input id="opprest-low" type="text" v-model="filters.opprest.low"/>
-                                    </div>
-                                    
-                                    <div class="select-container">
-                                        <label for="opprest-high">High</label><br>
-                                        <input id="opprest-high" type="text" v-model="filters.opprest.high"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.lastresult}">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'lastresult' ? null : 'lastresult')">
-                                <span v-if="filters.lastresult === null">Last Result</span>
-                                <span v-else-if="filters.lastresult == 'covered'">Covered Last Game</span>
-                                <span v-else-if="filters.lastresult == 'no_cover'">No Cover Last Game</span>
-                                <i v-show="selectedFilter != 'lastresult'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'lastresult'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'lastresult'">
-                                <div class="dropdown-options">
-                                    <select class="default-select" v-model="filters.lastresult">
-                                        <option :value="null">N/A</option>
-                                        <option value="covered">Covered</option>
-                                        <option value="no_cover">Did Not Cover</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" :class="{ 'dropdown-filter-applied': filters.lastlocation}">
-                            <div class="selected-value" @click="selectedFilter = (selectedFilter == 'lastlocation' ? null : 'lastlocation')">
-                                <span v-if="!filters.lastlocation">Last Location</span>
-                                <span v-else-if="filters.lastlocation == 'home'">Last Game Home</span>
-                                <span v-else-if="filters.lastlocation == 'away'">Last Game Away</span>
-                                <i v-show="selectedFilter != 'lastlocation'" class="fa-solid fa-caret-right align-right"></i>
-                                <i v-show="selectedFilter == 'lastlocation'" class="fa-solid fa-caret-down align-right"></i>
-                            </div>
-                            <div class="dropdown-container" v-show="selectedFilter == 'lastlocation'">
-                                <div class="dropdown-options">
-                                    <select class="default-select" v-model="filters.lastlocation">
-                                        <option :value="null">N/A</option>
-                                        <option value="home">Home</option>
-                                        <option value="away">Away</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="record-container">
-                            <button v-on:click="fetchSchedule()" style="margin-top: 10px;">CLICK HERE TO UPDATE</button>
-                            <div v-if="record.ATS" style="margin-top: 10px">
-                                ATS: {{ record.ATS.Win }} - {{ record.ATS.Loss }} ({{ record.ATS.Units }}u, {{ record.ATS.ROI }}% ROI)
-                                <br/>
-                                SU: {{ record.SU.Win }} - {{ record.SU.Loss }} ({{ record.SU.Units }}u, {{ record.SU.ROI }}% ROI)
+                            <div class="dropdown-containers">
+                                <high-low-dropdown :filter="filters.spread" :config="config.spread" filterName="Spread" @filter-changed="updateFilter"/>
+                                <high-low-dropdown :filter="filters.week" :config="config.week" filterName="Week" @filter-changed="updateFilter"/>
+                                <high-low-dropdown :filter="filters.total" :config="config.total" filterName="Total" @filter-changed="updateFilter"/>
+                                <option-dropdown :filter="filters.divisional" :config="config.divisional" filterName="Divisional" @filter-changed="updateFilter"/>
+                                <option-dropdown :filter="filters.homeaway" :config="config.homeaway" filterName="Home/Away" @filter-changed="updateFilter"/>
+                                <option-dropdown :filter="filters.gametype" :config="config.gametype" filterName="Game Type" @filter-changed="updateFilter"/>
+                                <high-low-dropdown :filter="filters.daysrest" :config="config.daysrest" filterName="Rest" @filter-changed="updateFilter"/>
+                                <high-low-dropdown :filter="filters.opprest" :config="config.opprest" filterName="Opp Rest" @filter-changed="updateFilter"/>
+                                <option-dropdown :filter="filters.lastresult" :config="config.lastresult" filterName="Last Result" @filter-changed="updateFilter"/>
+                                <option-dropdown :filter="filters.lastlocation" :config="config.lastlocation" filterName="Last Location" @filter-changed="updateFilter"/>
                             </div>
                         </div>
                     </th>
@@ -260,7 +88,10 @@
 </template>
 
 <script>
+import HighLowDropdown from './dropdowns/HighLowDropdown.vue';
+import OptionDropdown from './dropdowns/OptionDropdown.vue';
 export default {
+  components: { HighLowDropdown, OptionDropdown },
     name: 'SystemBuilder',
     // other component properties...
     data() {
@@ -269,31 +100,66 @@ export default {
             record: [],
             selectedFilter: null,
             filters: {
-                spread: {
-                    low: -30,
-                    high: 30
-                },
-                week: {
-                    low: null,
-                    high: null
-                },
-                total: {
-                    low: null,
-                    high: null
-                },
-                daysrest: {
-                    low: null,
-                    high: null
-                },
-                opprest: {
-                    low: null,
-                    high: null
-                },
+                spread: {low: -30,high: 30},
+                week: {low: 1,high: 22},
+                total: {low: 28,high: 64},
+                daysrest: {low: 4,high: 17},
+                opprest: {low: 4,high: 17},
                 divisional: null,
                 homeaway: null,
                 gametype: null,
                 lastresult: null,
-                lastlocation: null,
+                lastlocation: null
+            },
+            config: {
+                spread: {min: -30,max: 30},
+                week: {min: 1,max: 22},
+                total: {min: 28,max: 64},
+                daysrest: {min: 4,max: 17},
+                opprest: {min: 4,max: 17},
+                divisional: {
+                    options: {
+                        "Yes": "Divisional",
+                        "No": "Non-divisional"
+                    }
+                },
+                homeaway: {
+                    options: {
+                        "home": "Home",
+                        "away": "Away",
+                        "neutral": "Neutral"
+                    }
+                },
+                gametype: {
+                    options: {
+                        "regular": "Regular Season",
+                        "playoffs": "Playoffs"
+                    }
+                },
+                lastresult: {
+                    options: {
+                        "covered": "Covered Last Game",
+                        "nocover": "No Cover Last Game"
+                    }
+                },
+                lastlocation: {
+                    options: {
+                        "home": "Home Last Game",
+                        "away": "Away Last Game"
+                    }
+                }
+            },
+            translateArr: {
+                'Spread':'spread',
+                'Week':'week',
+                'Total':'total',
+                'Rest':'daysrest',
+                'Opp Rest': 'opprest',
+                'Divisional':'divisional',
+                'Home/Away':'homeaway',
+                'Game Type':'gametype',
+                'Last Result': 'lastresult',
+                'Last Location': 'lastlocation'
             }
         };
     },
@@ -322,6 +188,10 @@ export default {
                 this.filters.spread.high = this.filters.spread.low;
                 this.filters.spread.low = tmp;
             }
+        },
+        updateFilter: function(newFilter, filterType) {
+            let trueFilter = this.translateArr?.[filterType] ?? filterType;
+            this.filters[trueFilter] = newFilter;
         }
     },
 }
@@ -373,16 +243,6 @@ export default {
         background-color: #e0e0e0;
     }
 
-    /* Additional styles for the custom dropdown */
-    .custom-dropdown {
-        position: relative;
-        display: inline-block;
-        width: 200px;
-        background-color: #FFFFFF;
-        margin-right: 5px;
-        margin-top: 5px;
-    }
-
     .dropdown-filter-applied { 
         box-shadow: 5px 0 0 0 blue inset;
         border-radius: 4px 0 0 0;
@@ -404,19 +264,11 @@ export default {
         border-radius: 0px 0px 4px 4px;
     }
 
-    .dropdown-container {
-        position: absolute;
-        z-index: 1;
-        background-color: #fff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 200px;
+    .dropdown-containers {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Two columns */
+        gap: 10px; /* Adjust the gap between divs */
     }
-
-    /* Show options when the dropdown is expanded */
-    .custom-dropdown.expanded .dropdown-options {
-        display: block;
-    }
-    
 
     .logo {
         max-width: 50px;
@@ -556,6 +408,26 @@ export default {
     cursor: pointer;
     -webkit-appearance: none;
     margin-top: -7px;
+    }
+
+    .roi-table {
+        margin-top: 10px;
+        border-collapse: collapse;
+    }
+    .roi-table th, 
+    .roi-table td {
+        border: 1px solid black;
+        padding: 8px;
+    }
+    .roi-table th[colspan="2"], 
+    .roi-table th[colspan="4"] {
+        background-color: #f2f2f2;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Two columns */
+        gap: 10px; /* Adjust the gap between divs */
     }
     
 </style>

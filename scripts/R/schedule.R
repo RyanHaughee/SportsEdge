@@ -27,7 +27,7 @@ con <- get_db()
 db_table <- "nfl_schedule" #UPDATE
 
 # NFL team schedules
-nfl_schedule <- load_schedules(seasons = 2018:2023)
+nfl_schedule <- load_schedules(seasons = 2016:2023)
 
 # Enable local infile loading for the RMySQL connection
 dbGetQuery(con, "SET GLOBAL local_infile = 'ON'")
