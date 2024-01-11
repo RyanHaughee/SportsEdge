@@ -31,14 +31,17 @@ export default {
     // other component properties...
     data() {
         return {
-            curFilter: this.filter,
-            options: this.config.options
+            options: this.config.options,
+            curFilter: this.filter
         };
     },
     watch: {
         curFilter() {
             this.handleFilterChange();
-        }
+        },
+        filter() {
+            this.curFilter = this.filter;
+        },
     },
     computed: {
     },

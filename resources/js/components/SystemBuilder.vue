@@ -269,6 +269,7 @@ export default {
             }
         },
         updateFilter: function(newFilter, filterType) {
+            console.log(filterType);
             let trueFilter = this.translateArr?.[filterType] ?? filterType;
             if (trueFilter) {
                 this.filters[trueFilter] = newFilter;
@@ -295,6 +296,7 @@ export default {
             .then(response => {
                 this.filters = response.data.filters.filters;
                 this.fetchSchedule();
+                this.fetchFilters();
             })
             .catch(error => {
                 console.error('Error fetching schedule:', error);
