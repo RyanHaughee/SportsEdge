@@ -129,9 +129,9 @@ class ScheduleBuilder extends Builder
      */
     public function lastGameResult($cover) {
         if ($cover) {
-            return $this->where('_nfl_schedule.prev_result','>','_nfl_schedule.prev_spread_line');
+            return $this->whereRaw('_nfl_schedule.prev_result > _nfl_schedule.prev_spread_line');
         } else {
-            return $this->where('_nfl_schedule.prev_result','<','_nfl_schedule.prev_spread_line');
+            return $this->whereRaw('_nfl_schedule.prev_result < _nfl_schedule.prev_spread_line');
         }
     }
 
@@ -143,5 +143,31 @@ class ScheduleBuilder extends Builder
      */
     public function lastGameLocation($location) {
         return $this->where('_nfl_schedule.prev_location',$location);
+    }
+
+    public function prevResultFilter($low, $high) {
+        return $this->where('_nfl_schedule.prev_result','>=',$low)->where('_nfl_schedule.prev_result','<=',$high);
+    }
+
+    public function oppLastGameResult($cover) {
+        if ($cover) {
+            return $this->whereRaw('_nfl_schedule.opp_prev_result > _nfl_schedule.opp_prev_spread_line');
+        } else {
+            return $this->whereRaw('_nfl_schedule.opp_prev_result < _nfl_schedule.opp_prev_spread_line');
+        }
+    }
+
+    /**
+     * Filter by opponent rest
+     *
+     * @param int $low lower rest
+     * @param int $high higher rest
+     */
+    public function oppLastGameLocation($location) {
+        return $this->where('_nfl_schedule.opp_prev_location',$location);
+    }
+
+    public function oppPrevResultFilter($low, $high) {
+        return $this->where('_nfl_schedule.opp_prev_result','>=',$low)->where('_nfl_schedule.opp_prev_result','<=',$high);
     }
 }

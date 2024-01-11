@@ -27,17 +27,17 @@ class Schedule extends Model
     public static function processFilters($results, $filters) 
     {
         // SPREAD HIGH / LOW
-        if (isset($filters['spread'])) {
+        if (isset($filters['spread']) && ($filters['spread']['low'] > -30 || $filters['spread']['high'] < 30)) {
             $results = self::processSpreadFilter($filters, $results);
         }
 
         // WEEK HIGH / LOW
-        if (isset($filters['week'])) {
+        if (isset($filters['week']) && ($filters['week']['low'] > 1 || $filters['week']['high'] < 22)) {
             $results = self::processWeekFilter($filters, $results);
         }
 
         // WEEK HIGH / LOW
-        if (isset($filters['total'])) {
+        if (isset($filters['total']) && ($filters['total']['low'] > 28 || $filters['total']['high'] < 64)) {
             $results = self::processTotalFilter($filters, $results);
         }
 
@@ -50,11 +50,11 @@ class Schedule extends Model
             $results = self::gameTypeFilter($filters, $results);
         }
 
-        if(isset($filters['daysrest'])) {
+        if(isset($filters['daysrest']) && ($filters['daysrest']['low'] > 4 || $filters['daysrest']['high'] < 17)) {
             $results = self::filterRest($filters, $results);
         }
 
-        if(isset($filters['opprest'])) {
+        if(isset($filters['opprest']) && ($filters['opprest']['low'] > 4 || $filters['opprest']['high'] < 17)) {
             $results = self::filterOppRest($filters, $results);
         }
 
@@ -68,6 +68,22 @@ class Schedule extends Model
 
         if(isset($filters['lastlocation'])) {
             $results = self::lastGameLocation($filters, $results);
+        }
+
+        if(isset($filters['prevresult']) && ($filters['prevresult']['low'] > -52 || $filters['prevresult']['high'] < 52)) {
+            $results = self::previousGameResult($filters, $results);
+        }
+
+        if(isset($filters['opplastresult'])) {
+            $results = self::oppLastResultFilter($filters, $results);
+        }
+
+        if(isset($filters['opplastlocation'])) {
+            $results = self::oppLastGameLocation($filters, $results);
+        }
+
+        if(isset($filters['oppprevresult']) && ($filters['oppprevresult']['low'] > -52 || $filters['oppprevresult']['high'] < 52)) {
+            $results = self::oppPreviousGameResult($filters, $results);
         }
 
         return $results;
@@ -156,6 +172,31 @@ class Schedule extends Model
         return $results->lastGameLocation($lastLocation);
     }
 
+    public static function previousGameResult($filters, $results){
+        $prevResultLow = isset($filters['prevresult']['low']) ? intval($filters['prevresult']['low']) : -52;
+        $prevResultHigh = isset($filters['prevresult']['high']) ? intval($filters['prevresult']['high']) : 52;
+    
+        return $results->prevResultFilter($prevResultLow, $prevResultHigh);
+    }
+    
+    public static function oppLastResultFilter($filters, $results) {
+        $lastResult = $filters['opplastresult'] == "covered" ?? false;
+    
+        return $results->oppLastGameResult($lastResult);
+    }
+
+    public static function oppLastGameLocation($filters, $results) {
+        $lastLocation = $filters['opplastlocation'] == "home" ? "Home" : "Away";
+    
+        return $results->oppLastGameLocation($lastLocation);
+    }
+
+    public static function oppPreviousGameResult($filters, $results){
+        $prevResultLow = isset($filters['oppprevresult']['low']) ? intval($filters['oppprevresult']['low']) : -52;
+        $prevResultHigh = isset($filters['oppprevresult']['high']) ? intval($filters['oppprevresult']['high']) : 52;
+    
+        return $results->oppPrevResultFilter($prevResultLow, $prevResultHigh);
+    }
 
     public static function computeGamblingRecord($games) {
         $returnObj['Total'] = [
@@ -185,6 +226,7 @@ class Schedule extends Model
             $returnObj[$season]['SU']['W'] += $game->mov > 0 ? 1 : 0;
             $returnObj[$season]['SU']['L'] += $game->mov < 0 ? 1 : 0;
         
+
             // Units calculation
             if ($game->bet_won != 0 || $game->bet_lost != 0) {
                 $spreadOdds = (intval($game->spread_odds) / 100);
@@ -203,9 +245,9 @@ class Schedule extends Model
             if($game->mov != 0) {
                 $moneyLineOdds = (intval($game->moneyline_odds) / 100);
                 if ($game->mov > 0) {
-                    $unitChange = $moneyLineOdds > 0 ? $moneyLineOdds : 1;
+                    $unitsChange = $moneyLineOdds > 0 ? $moneyLineOdds : 1;
                 } else {
-                    $unitChange = $moneyLineOdds > 0 ? -1 : $moneyLineOdds;
+                    $unitsChange = $moneyLineOdds > 0 ? -1 : $moneyLineOdds;
                 }
 
                 $returnObj['Total']['SU']['Investment'] += ($moneyLineOdds > 0) ? 1 : abs($moneyLineOdds);

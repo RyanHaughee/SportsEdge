@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
+use App\Models\SystemFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,19 @@ class ScheduleController extends Controller
 
         $results = Schedule::query()
             ->selectColumns()
-            ->joinTeams();
+            ->joinTeams()
+            ->where('season','>=',2019)
+            ->where('season','<=',2023);
+
+        // $results = Schedule::query()
+        //     ->selectColumns()
+        //     ->joinTeams()
+        //     ->where('season','<=',2022);
+
+        // $results = Schedule::query()
+        //     ->selectColumns()
+        //     ->joinTeams()
+        //     ->where('season','>=',2014);
 
         $results = Schedule::processFilters($results, $filters);
 

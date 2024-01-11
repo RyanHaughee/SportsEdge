@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ScheduleController;
 
 /*
@@ -19,3 +20,5 @@ Route::get('/', function () {
 });
 
 Route::get('/schedule/all', [ScheduleController::class, 'fetchAll']);
+Route::get('/filter/get/{id?}', [FilterController::class, 'get']);
+Route::post('/save/filter', [FilterController::class, 'save']);

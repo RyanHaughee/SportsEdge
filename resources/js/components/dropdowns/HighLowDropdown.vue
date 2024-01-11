@@ -76,7 +76,7 @@ export default {
                     this.filter.high = this.filter.low;
                     this.filter.low = tmp;
                 }
-                this.$emit('filter-changed',this.filter, this.selectedFilter);
+                this.$emit('filter-changed',this.filter, this.filterName);
             }, 1000);
         }
     },
@@ -84,34 +84,5 @@ export default {
 </script>
 
 <style>
-    .custom-dropdown {
-        position: relative;
-        display: inline-block;
-        width: 100%;
-        background-color: #FFFFFF;
-        margin-right: 5px;
-        margin-top: 5px;
-    }
-
-    /* Show options when the dropdown is expanded */
-    .custom-dropdown.expanded .dropdown-options {
-        display: block;
-    }
-
-    /* Additional styles for the custom dropdown */
-    .dropdown-container {
-        position: absolute;
-        width:100%;
-        top: 100%; /* Adjust this value as needed */
-        left: 0;
-        z-index: 999; /* Ensure it's above other content */
-        /* Other styles for the dropdown container */
-        background: white;
-    }
-
-    .dropdown-options {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 0px 0px 4px 4px;
-    }
+    
 </style>
