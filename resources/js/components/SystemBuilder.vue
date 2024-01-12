@@ -86,13 +86,21 @@
             <table class="units-table" v-if="record?.Total?.ATS">
                 <thead>
                     <tr>
-                        <th colspan="5">Grade: {{ record?.Total?.ATS?.Grade }}</th>
+                        <th colspan="9">Grade: {{ record?.Total?.ATS?.Grade }}</th>
                     </tr>
                     <tr>
-                        <th>Year</th>
-                        <th>Wins</th>
-                        <th>Losses</th>
-                        <th>Units</th>
+                        <th colspan="5">ATS</th>
+                        <th colspan="4">SU</th>
+                    </tr>
+                    <tr style="background-color: blue; color: white">
+                        <th>Yr</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>U</th>
+                        <th>ROI</th>
+                        <th style="border-left-style: solid;">W</th>
+                        <th>L</th>
+                        <th>U</th>
                         <th>ROI</th>
                     </tr>
                 </thead>
@@ -103,15 +111,23 @@
                         <td>{{ yearData.ATS.L }}</td>
                         <td>{{ yearData.ATS.Units }}</td>
                         <td>{{ yearData.ATS.ROI }}</td>
+                        <td style="border-left-style: solid;">{{ yearData.SU.W }}</td>
+                        <td>{{ yearData.SU.L }}</td>
+                        <td>{{ yearData.SU.Units }}</td>
+                        <td>{{ yearData.SU.ROI }}</td>
                     </tr>
                 </tbody>
                 <tbody v-else>
-                    <tr>
+                    <tr style="background-color:gray">
                         <td>Total</td>
                         <td>{{ record.Total.ATS.W }}</td>
                         <td>{{ record.Total.ATS.L }}</td>
                         <td>{{ record.Total.ATS.Units }}</td>
                         <td>{{ record.Total.ATS.ROI }}</td>
+                        <td style="border-left-style: solid;">{{ record.Total.SU.W }}</td>
+                        <td>{{ record.Total.SU.L }}</td>
+                        <td>{{ record.Total.SU.Units }}</td>
+                        <td>{{ record.Total.SU.ROI }}</td>
                     </tr>
                 </tbody>
                 <tr>
