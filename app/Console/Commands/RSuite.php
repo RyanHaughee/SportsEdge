@@ -54,5 +54,7 @@ class RSuite extends Command
             } 
         }
 
+        DB::select('CALL NFLCalculateStreaks');
+        
     }
 }
