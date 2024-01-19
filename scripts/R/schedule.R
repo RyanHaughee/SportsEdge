@@ -27,7 +27,7 @@ con <- get_db()
 db_table <- "nfl_schedule" #UPDATE
 
 # NFL team schedules
-nfl_schedule <- load_schedules(seasons = 2023)
+nfl_schedule <- load_schedules(seasons = 2018:2023)
 
 # Enable local infile loading for the RMySQL connection
 dbGetQuery(con, "SET GLOBAL local_infile = 'ON'")
@@ -46,11 +46,11 @@ dbWriteTable(
   convert = "NULL"  # Specify how NA values should be handled
 )
 
-# Filter non-numeric column names
-non_numeric_cols <- names(nfl_schedule)[!sapply(nfl_schedule, is.numeric)] # UPDATE
+# Filter character column names
+character_cols <- names(nfl_schedule)[sapply(nfl_schedule, is.character)]
 
-# SQL query to update empty strings and NA values to NULL for each non-numeric column
-for (col in non_numeric_cols) {
+# SQL query to update empty strings and NA values to NULL for each character column
+for (col in character_cols) {
   query <- sprintf("UPDATE %s SET %s = NULL WHERE %s = '' OR %s IS NULL;", db_table, col, col, col)
   dbExecute(con, query)
 }

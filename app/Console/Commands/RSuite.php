@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class RSuite extends Command
 {
@@ -54,5 +55,7 @@ class RSuite extends Command
             } 
         }
 
+        DB::select('CALL NFLCalculateFields');
+        
     }
 }
